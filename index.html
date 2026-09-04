@@ -1,1 +1,140 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Key Generator Dashboard</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 450px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+        input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .result-box {
+            margin-top: 20px;
+            padding: 12px;
+            background: #e8f4fd;
+            border: 1px solid #bbe1fa;
+            border-radius: 6px;
+            word-break: break-all;
+            display: none;
+        }
+        .result-box p {
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Key Generator</h2>
+        
+        <div class="form-group">
+            <label for="duration">दिन (Duration in Days):</label>
+            <input type="number" id="duration" placeholder="जैसे: 30" value="30">
+        </div>
+
+        <button onclick="generateKey()">Key Generate करें</button>
+
+        <div class="result-box" id="resultBox">
+            <p><strong>Generated Key:</strong> <span id="keyValue"></span></p>
+            <p><strong>Expires At:</strong> <span id="expiryValue"></span></p>
+        </div>
+    </div>
+
+    <script>
+        async function generateKey() {
+            const duration = document.getElementById('duration').value;
+            const resultBox = document.getElementById('resultBox');
+            const keyValue = document.getElementById('keyValue');
+            const expiryValue = document.getElementById('expiryValue');
+
+            if (!duration) {
+                alert('कृपया दिन दर्ज करें!');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ duration: Number(duration) })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    keyValue.textContent = data.key;
+                    expiryValue.textContent = new Date(data.expiresAt).toLocaleString();
+                    resultBox.style.display = 'block';
+                } else {
+                    alert('Error: ' + (data.error || 'कुछ गलत हुआ है'));
+                }
+            } catch (err) {
+                alert('Server Connection Error!');
+                console.error(err);
+            }
+        }
+    </script>
+
+</body>
+</html>
 
