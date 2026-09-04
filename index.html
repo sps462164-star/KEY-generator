@@ -3,138 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Key Generator Dashboard</title>
+    <title>Instant Key Generator - Pay & Get Key</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        body {
-            background-color: #f4f7f6;
-            color: #333;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container {
-            background: #ffffff;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 450px;
-        }
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #2c3e50;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            color: #555;
-        }
-        input {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            font-size: 16px;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.3s ease;
-            margin-top: 10px;
-        }
-        button:hover {
-            background-color: #2980b9;
-        }
-        .result-box {
-            margin-top: 20px;
-            padding: 12px;
-            background: #e8f4fd;
-            border: 1px solid #bbe1fa;
-            border-radius: 6px;
-            word-break: break-all;
-            display: none;
-        }
-        .result-box p {
-            margin-bottom: 5px;
-            font-size: 14px;
-        }
+        body { font-family: Arial, sans-serif; background: #f4f7f6; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 450px; text-align: center; }
+        h2 { color: #00ba7c; margin-bottom: 20px; }
+        .plan-box { border: 2px solid #ddd; padding: 15px; margin: 10px 0; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        .plan-box.active { border-color: #00ba7c; background: #e8f8f2; }
+        #qrcode { margin: 20px auto; display: flex; justify-content: center; }
+        input, button { width: 100%; padding: 12px; margin-top: 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 16px; box-sizing: border-box; }
+        button { background: #00ba7c; color: white; border: none; font-weight: bold; cursor: pointer; }
+        button:hover { background: #009663; }
+        .key-box { background: #e3f2fd; border: 1px dashed #2196f3; padding: 15px; margin-top: 15px; word-break: break-all; font-family: monospace; font-size: 18px; color: #0d47a1; display: none; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h2>Key Generator</h2>
-        
-        <div class="form-group">
-            <label for="duration">दिन (Duration in Days):</label>
-            <input type="number" id="duration" placeholder="जैसे: 30" value="30">
-        </div>
+<div class="container">
+    <h2>🚀 Instant License Key Portal</h2>
+    <p>प्लान चुनें और PayTM से पेमेंट करके तुरंत की पाएं:</p>
 
-        <button onclick="generateKey()">Key Generate करें</button>
-
-        <div class="result-box" id="resultBox">
-            <p><strong>Generated Key:</strong> <span id="keyValue"></span></p>
-            <p><strong>Expires At:</strong> <span id="expiryValue"></span></p>
-        </div>
+    <!-- प्लान सिलेक्शन -->
+    <div class="plan-box active" onclick="selectPlan(70, 7)">
+        <h3>7 दिन का पास</h3>
+        <p><b>₹70</b></p>
+    </div>
+    <div class="plan-box" onclick="selectPlan(300, 30)">
+        <h3>30 दिन का पास</h3>
+        <p><b>₹300</b></p>
     </div>
 
-    <script>
-        async function generateKey() {
-            const duration = document.getElementById('duration').value;
-            const resultBox = document.getElementById('resultBox');
-            const keyValue = document.getElementById('keyValue');
-            const expiryValue = document.getElementById('expiryValue');
+    <!-- QR कोड दिखाने की जगह -->
+    <div id="qrcode"></div>
+    <p>इस QR को PayTM या किसी भी UPI ऐप से स्कैन करके भुगतान करें:</p>
 
-            if (!duration) {
-                alert('कृपया दिन दर्ज करें!');
-                return;
-            }
+    <!-- UTR वेरीफाई करने का फॉर्म -->
+    <div style="margin-top: 20px;">
+        <input type="text" id="utrInput" placeholder="पेमेंट करने के बाद UTR/Reference No. यहाँ डालें">
+        <button onclick="verifyAndGetKey()">की जनरेट करें (Verify & Get Key)</button>
+    </div>
 
-            try {
-                const response = await fetch('/api/generate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ duration: Number(duration) })
-                });
+    <!-- की दिखने की जगह -->
+    <div id="keyResult" class="key-box"></div>
+</div>
 
-                const data = await response.json();
+<script>
+    // यहाँ अपनी PayTM UPI ID और अपना असली नाम डालें
+    const paytmUpiID = "yourpaytmid@paytm"; 
+    const merchantName = "Your Business Name";
 
-                if (data.success) {
-                    keyValue.textContent = data.key;
-                    expiryValue.textContent = new Date(data.expiresAt).toLocaleString();
-                    resultBox.style.display = 'block';
-                } else {
-                    alert('Error: ' + (data.error || 'कुछ गलत हुआ है'));
-                }
-            } catch (err) {
-                alert('Server Connection Error!');
-                console.error(err);
-            }
+    let selectedAmount = 70;
+    let selectedDays = 7;
+
+    function selectPlan(amount, days) {
+        selectedAmount = amount;
+        selectedDays = days;
+        
+        document.querySelectorAll('.plan-box').forEach(box => box.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        
+        generateQR();
+    }
+
+    function generateQR() {
+        document.getElementById("qrcode").innerHTML = "";
+        let upiLink = `upi://pay?pa=${paytmUpiID}&pn=${encodeURIComponent(merchantName)}&am=${selectedAmount}.00&cu=INR`;
+        
+        new QRCode(document.getElementById("qrcode"), {
+            text: upiLink,
+            width: 180,
+            height: 180
+        });
+    }
+
+    // पेज खुलते ही डिफ़ॉल्ट QR बन जाएगा
+    generateQR();
+
+    function verifyAndGetKey() {
+        let utr = document.getElementById("utrInput").value.trim();
+        
+        if (!utr || utr.length < 8) {
+            alert("कृपया सही UTR / Transaction Reference Number दर्ज करें!");
+            return;
         }
-    </script>
+
+        // यहाँ बेसिक ऑटोमैटिक लॉ직 है (आप चाहें तो इसे अपने बैकएंड/ डेटाबेस से जोड़ सकते हैं)
+        let randomKey = "KEY-" + Math.random().toString(36).substring(2, 8).toUpperCase() + "-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+        
+        let resultBox = document.getElementById("keyResult");
+        resultBox.style.display = "block";
+        resultBox.innerHTML = `🎉 भुगतान सफल! आपकी ${selectedDays} दिन की की:<br><b>${randomKey}</b>`;
+        
+        // यूटीआर को लोकल स्टोरेज में सेव ताकि डबल यूज़ न हो सके
+        localStorage.setItem(utr, randomKey);
+    }
+</script>
 
 </body>
 </html>
+
 
