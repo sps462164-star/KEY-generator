@@ -2,9 +2,15 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 
+// यहाँ होमपेज पर एरर की जगह साफ़ मैसेज दिखेगा
 app.get('/', (req, res) => {
-    res.send("Multi-App Key Server is Live and Running Successfully!");
+    res.json({
+        status: "online",
+        message: "Multi-App Key Server is Live and Running Successfully!",
+        developer: "Active"
+    });
 });
+
 
 const databaseKeys = {
     "br_mod_v1": {
