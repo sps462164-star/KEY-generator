@@ -1,27 +1,106 @@
 const express = require('express');
-const mongoose = require('mongoose');
 const app = express();
-
 app.use(express.json());
 
-// आपके डेटाबेस कनेक्शन का कोड (यहाँ आपका MONGO_URI काम करेगा)
-const mongoURI = process.env.MONGO_URI;
-
-mongoose.connect(mongoURI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('MongoDB Connected Successfully'))
-.catch(err => console.log('Database Connection Error:', err));
-
-// मुख्य पेज का रूट - अब यहाँ 'Cannot GET /' की जगह यह मैसेज दिखेगा
 app.get('/', (req, res) => {
-  res.send('Key Generator Server is Live!');
+    res.send("Multi-App Key Server is Live and Running Successfully!");
 });
 
-// पोर्ट सेट करना ताकि रेंडर पर सर्वर चल सके
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log('Your service is live 🚀');
+const databaseKeys = {
+    "br_mod_v1": {
+        "BR1-1D-001": { days: 1, used: false, deviceId: null },
+        "BR1-7D-002": { days: 7, used: false, deviceId: null },
+        "BR1-30D-003": { days: 30, used: false, deviceId: null }
+    },
+    "drip_client": {
+        "DRIP-1D-001": { days: 1, used: false, deviceId: null },
+        "DRIP-7D-002": { days: 7, used: false, deviceId: null },
+        "DRIP-30D-003": { days: 30, used: false, deviceId: null }
+    },
+    "haxx_cher_pro": {
+        "HAXX-1D-001": { days: 1, used: false, deviceId: null },
+        "HAXX-7D-002": { days: 7, used: false, deviceId: null },
+        "HAXX-30D-003": { days: 30, used: false, deviceId: null }
+    },
+    "silent_cheat": {
+        "SILENT-1D-001": { days: 1, used: false, deviceId: null },
+        "SILENT-7D-002": { days: 7, used: false, deviceId: null },
+        "SILENT-30D-003": { days: 30, used: false, deviceId: null }
+    },
+    "bala_mod": {
+        "BALA-1D-001": { days: 1, used: false, deviceId: null },
+        "BALA-7D-002": { days: 7, used: false, deviceId: null },
+        "BALA-30D-003": { days: 30, used: false, deviceId: null }
+    },
+    "prime_hook_pro": {
+        "PRIME-1D-001": { days: 1, used: false, deviceId: null },
+        "PRIME-7D-002": { days: 7, used: false, deviceId: null },
+        "PRIME-30D-003": { days: 30, used: false, deviceId: null }
+    },
+    "engry_mod": {
+        "ENGRY-1D-001": { days: 1, used: false, deviceId: null },
+        "ENGRY-7D-002": { days: 7, used: false, deviceId: null },
+        "ENGRY-30D-003": { days: 30, used: false, deviceId: null }
+    },
+    "nine_x": {
+        "N9X-1D-001": { days: 1, used: false, deviceId: null },
+        "N9X-7D-002": { days: 7, used: false, deviceId: null },
+        "N9X-30D-003": { days: 30, used: false, deviceId: null }
+    },
+    "abcd_mode": {
+        "ABCD-1D-001": { days: 1, used: false, deviceId: null },
+        "ABCD-7D-002": { days: 7, used: false, deviceId: null },
+        "ABCD-30D-003": { days: 30, used: false, deviceId: null }
+    },
+    "dolphin_mod": {
+        "DOLPHIN-1D-001": { days: 1, used: false, deviceId: null },
+        "DOLPHIN-7D-002": { days: 7, used: false, deviceId: null },
+        "DOLPHIN-30D-003": { days: 30, used: false, deviceId: null }
+    },
+    "px_chet_pro": {
+        "PX-1D-001": { days: 1, used: false, deviceId: null },
+        "PX-7D-002": { days: 7, used: false, deviceId: null },
+        "PX-30D-003": { days: 30, used: false, deviceId: null }
+    }
+};
+
+app.post('/api/verify', (req, res) => {
+    const { appName, key, deviceId } = req.body;
+
+    if (!databaseKeys[appName] || !databaseKeys[appName][key]) {
+        return res.json({ status: "error", message: "Invalid Key for this specific App!" });
+    }
+
+    let keyData = databaseKeys[appName][key];
+
+    if (keyData.used && keyData.deviceId !== deviceId) {
+        return res.json({ status: "error", message: "Key already used on another device!" });
+    }
+
+    keyData.used = true;
+    keyData.deviceId = deviceId;
+
+    res.json({ 
+        status: "success", 
+        message: "Key Verified Successfully!", 
+        validDays: keyData.days 
+    });
 });
+
+app.post('/api/reset', (req, res) => {
+    const { appName, key } = req.body;
+
+    if (databaseKeys[appName] && databaseKeys[appName][key]) {
+        databaseKeys[appName][key].used = false;
+        databaseKeys[appName][key].deviceId = null;
+        return res.json({ status: "success", message: "Key reset successfully for new device!" });
+    }
+
+    res.json({ status: "error", message: "Key not found in this app!" });
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Multi-App Key Server running on port ${PORT}`);
+});
+          
