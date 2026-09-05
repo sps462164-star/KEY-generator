@@ -1,70 +1,104 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIP Key Store</title>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; text-align: center; padding: 20px; }
-        .container { max-width: 400px; margin: auto; background: #1e293b; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; font-size: 16px; }
-        select { background: #334155; color: #fff; }
-        button { background: #22c55e; color: #fff; font-weight: bold; cursor: pointer; }
-        button:hover { background: #16a34a; }
-        #qrcode { background: #fff; padding: 15px; display: inline-block; border-radius: 8px; margin-top: 15px; }
-        .price { font-size: 22px; color: #38bdf8; margin: 10px 0; font-weight: bold; }
-    </style>
-</head>
-<body>
+const express = require('express');
+const app = express();
+app.use(express.json());
 
-    <div class="container">
-        <h2>VIP Key Store</h2>
-        <p>Select your plan:</p>
-        
-        <select id="planSelect" onchange="updatePayment()">
-            <option value="70">1 Day - ₹70</option>
-            <option value="150">3 Days - ₹150</option>
-            <option value="300">7 Days - ₹300</option>
-            <option value="800">30 Days - ₹800</option>
-        </select>
+// सभी 11 ऐप्स और उनकी अलग-अलग कीज़ का डेटाबेस
+const databaseKeys = {
+    "br_mod_v1": {
+        "BR1-1D-001": { days: 1, used: false, deviceId: null },
+        "BR1-7D-002": { days: 7, used: false, deviceId: null },
+        "BR1-30D-003": { days: 30, used: false, deviceId: null }
+    },
+    "drip_client": {
+        "DRIP-1D-001": { days: 1, used: false, deviceId: null },
+        "DRIP-7D-002": { days: 7, used: false, deviceId: null },
+        "DRIP-30D-003": { days: 30, used: false, deviceId: null }
+    },
+    "haxx_cher_pro": {
+        "HAXX-1D-001": { days: 1, used: false, deviceId: null },
+        "HAXX-7D-002": { days: 7, used: false, deviceId: null },
+        "HAXX-30D-003": { days: 30, used: false, deviceId: null }
+    },
+    "silent_cheat": {
+        "SILENT-1D-001": { days: 1, used: false, deviceId: null },
+        "SILENT-7D-002": { days: 7, used: false, deviceId: null },
+        "SILENT-30D-003": { days: 30, used: false, deviceId: null }
+    },
+    "bala_mod": {
+        "BALA-1D-001": { days: 1, used: false, deviceId: null },
+        "BALA-7D-002": { days: 7, used: false, deviceId: null },
+        "BALA-30D-003": { days: 30, used: false, deviceId: null }
+    },
+    "prime_hook_pro": {
+        "PRIME-1D-001": { days: 1, used: false, deviceId: null },
+        "PRIME-7D-002": { days: 7, used: false, deviceId: null },
+        "PRIME-30D-003": { days: 30, used: false, deviceId: null }
+    },
+    "engry_mod": {
+        "ENGRY-1D-001": { days: 1, used: false, deviceId: null },
+        "ENGRY-7D-002": { days: 7, used: false, deviceId: null },
+        "ENGRY-30D-003": { days: 30, used: false, deviceId: null }
+    },
+    "nine_x": {
+        "N9X-1D-001": { days: 1, used: false, deviceId: null },
+        "N9X-7D-002": { days: 7, used: false, deviceId: null },
+        "N9X-30D-003": { days: 30, used: false, deviceId: null }
+    },
+    "abcd_mode": {
+        "ABCD-1D-001": { days: 1, used: false, deviceId: null },
+        "ABCD-7D-002": { days: 7, used: false, deviceId: null },
+        "ABCD-30D-003": { days: 30, used: false, deviceId: null }
+    },
+    "dolphin_mod": {
+        "DOLPHIN-1D-001": { days: 1, used: false, deviceId: null },
+        "DOLPHIN-7D-002": { days: 7, used: false, deviceId: null },
+        "DOLPHIN-30D-003": { days: 30, used: false, deviceId: null }
+    },
+    "px_chet_pro": {
+        "PX-1D-001": { days: 1, used: false, deviceId: null },
+        "PX-7D-002": { days: 7, used: false, deviceId: null },
+        "PX-30D-003": { days: 30, used: false, deviceId: null }
+    }
+};
 
-        <div class="price" id="priceDisplay">Amount: ₹70</div>
+// 1. की वेरीफाई करने का API
+app.post('/api/verify', (req, res) => {
+    const { appName, key, deviceId } = req.body;
 
-        <div id="qrcode"></div>
+    if (!databaseKeys[appName] || !databaseKeys[appName][key]) {
+        return res.json({ status: "error", message: "Invalid Key for this specific App!" });
+    }
 
-        <p style="font-size: 14px; color: #94a3b8; margin-top: 15px;">Scan using any UPI App (Paytm, PhonePe, GPay)</p>
-    </div>
+    let keyData = databaseKeys[appName][key];
 
-    <script>
-        // आपकी असली मर्चेंट यूपीआई आईडी और नाम
-        const upiId = "paytm.s3ozvzu@pty";
-        const payeeName = "Robin Kumar";
+    if (keyData.used && keyData.deviceId !== deviceId) {
+        return res.json({ status: "error", message: "Key already used on another device!" });
+    }
 
-        function updatePayment() {
-            const amount = document.getElementById("planSelect").value;
-            document.getElementById("priceDisplay").innerText = "Amount: ₹" + amount;
+    keyData.used = true;
+    keyData.deviceId = deviceId;
 
-            // UPI String formatting
-            const upiUrl = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR`;
+    res.json({ 
+        status: "success", 
+        message: "Key Verified Successfully!", 
+        validDays: keyData.days 
+    });
+});
 
-            // Clear old QR code
-            document.getElementById("qrcode").innerHTML = "";
+// 2. की रीसेट करने का API
+app.post('/api/reset', (req, res) => {
+    const { appName, key } = req.body;
 
-            // Generate new QR code
-            try {
-                var qr = qrcode(0, 'M');
-                qr.addData(upiUrl);
-                qr.make();
-                document.getElementById("qrcode").innerHTML = qr.createImgTag(5);
-            } catch (e) {
-                console.error("QR Generation failed", e);
-            }
-        }
+    if (databaseKeys[appName] && databaseKeys[appName][key]) {
+        databaseKeys[appName][key].used = false;
+        databaseKeys[appName][key].deviceId = null;
+        return res.json({ status: "success", message: "Key reset successfully for new device!" });
+    }
 
-        // Initial load
-        window.onload = updatePayment;
-    </script>
+    res.json({ status: "error", message: "Key not found in this app!" });
+});
 
-</body>
-</html>
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Multi-App Key Server running on port ${PORT}`);
+});
