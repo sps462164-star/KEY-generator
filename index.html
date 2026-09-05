@@ -102,3 +102,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Multi-App Key Server running on port ${PORT}`);
 });
+app.get('/', (req, res) => {
+    res.send("Multi-App Key Server is Live and Running Successfully!");
+});
