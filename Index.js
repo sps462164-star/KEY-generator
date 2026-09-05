@@ -21,7 +21,6 @@ app.get('/', (req, res) => {
     status: "Multi App Key Server is Live and Running Successfully!",
     databaseKeys: databaseKeys
   };
-  // यह ब्राउज़र पर JSON को एकदम सुंदर और सही तरीके से दिखाएगा
   res.setHeader('Content-Type', 'application/json');
   res.send(JSON.stringify(serverInfo, null, 2));
 });
