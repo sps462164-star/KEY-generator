@@ -2,6 +2,11 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 
+// ब्राउज़र में एरर या प्लेन टेक्स्ट ना दिखे, इसके लिए होम पेज रूट
+app.get('/', (req, res) => {
+    res.send("Multi-App Key Server is Live and Running Successfully!");
+});
+
 // सभी 11 ऐप्स और उनकी अलग-अलग कीज़ का डेटाबेस
 const databaseKeys = {
     "br_mod_v1": {
@@ -101,7 +106,4 @@ app.post('/api/reset', (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Multi-App Key Server running on port ${PORT}`);
-});
-app.get('/', (req, res) => {
-    res.send("Multi-App Key Server is Live and Running Successfully!");
 });
